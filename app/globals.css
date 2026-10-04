@@ -1,0 +1,725 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   NAZAR FORNO — sistema de design
+   Ordem: tokens → primitivas → componentes → padrões → telas.
+   Regra: nenhum literal novo sem token. Temas trocam VALORES, nunca lógica.
+   ========================================================================== */
+
+/* ---------- Tokens estáticos (Tailwind) ------------------------------------ */
+@theme {
+  /* Tipografia: uma família display (serif editorial) + uma família de
+     interface (sans). Conflito declarado com a constitution §4 ("uma família
+     principal") — registrado no relatório: a direção "revista gastronômica"
+     exige o par. O sans é a família principal para interface e corpo. */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  /* Escala de espaço — base 4px.
+     `--spacing` é o multiplicador das utilitárias numéricas do Tailwind
+     (`p-4` → calc(var(--spacing) * 4)). Ele NÃO gera as variáveis nomeadas:
+     para o `var(--space-N)` usado no CSS e nos valores arbitrários
+     (`py-[var(--space-20)]`) é preciso declarar a escala aqui. Sem esta lista,
+     40+ declarations caíam no vazio silenciosamente — paddings, gaps e
+    offsets de seção simplesmente não existiam no navegador. */
+  --spacing: 0.25rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Raio */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Escala de tipo — razão ~1.25 ancorada em 16px */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+
+  --leading-display: 0.98;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-relaxed: 1.65;
+
+  --tracking-tight: -0.022em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.02em;
+  --tracking-caps: 0.16em;
+  /* Step extra só para o micro-rótulo do wordmark (11px), que precisa de ar
+     para não virar mancha. Acima de --tracking-caps não é "tracking largo". */
+  --tracking-caps-lg: 0.3em;
+
+  /* Motion */
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0.8, 0.2, 1);
+
+  /* Layout */
+  --container-page: 80rem; /* 1280px */
+  /* Medidas de linha — regra da constitution: texto corrido entre 45 e 75
+     caracteres. 52ch para blocos densos (legenda, ficha técnica), 68ch para o
+     padrão, 72ch para o texto legal corrido. Acima de 75ch o olho perde o
+     retorno e a linha deixa de ser lida. */
+  --measure: 68ch;
+  --measure-tight: 52ch;
+  --measure-wide: 72ch;
+  --control-height: 48px;
+  --header-height: 4.5rem;
+  --header-height-scrolled: 3.75rem;
+  /* Alvo mínimo de toque — usado por skip link e controles inline. */
+  --size-touch: 2.75rem;
+
+  /* Camadas — apenas as que existem no código hoje. */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-drawer: 200;
+
+  /* Elevação: nenhuma. As superfícies são planas e se separam por
+     --color-hairline + a superfície, não por sombra. Sombra em tudo é o
+     antipadrão clássico; aqui ela não tem função em nenhuma tela. Se um dia
+     um elemento *flutuante* precisar de sombra (popover, toast), ele nasce
+     com o token e com medição de contraste próprios — não se improvisa. */
+
+  /* Motion — animações com motivo: entrada de conteúdo e abertura de menu */
+  --animate-rise: rise 680ms var(--ease-emphasized) both;
+  --animate-menu-in: menu-in 340ms var(--ease-emphasized) both;
+  --animate-fade: fade 500ms var(--ease-standard) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 12px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* ---------- Tokens semânticos --------------------------------------------- */
+:root,
+.theme-navy {
+  color-scheme: dark;
+
+  --palette-navy: #101820;
+  --palette-navy-deep: #0b1119;
+  --palette-creme: #f4eee4;
+  --palette-terracota: #a94735;
+  --palette-dourado: #c7a66a;
+  --palette-branco: #ffffff;
+
+  /* medido: creme/navy 15.51:1 · ink-2 8.50:1 · ink-3 6.20:1 · gold 7.75:1 */
+  --color-bg: var(--palette-navy);
+  --color-surface: #16202a;
+  --color-surface-muted: #1c2732;
+  --color-ink: var(--palette-creme);
+  --color-ink-2: #b3bcc6;
+  --color-ink-3: #8e9aa6;
+  --color-accent: var(--palette-terracota);
+  --color-accent-hover: #b8503c;
+  --color-accent-active: #963e2e;
+  --color-accent-fg: var(--palette-branco); /* 5.77:1 sobre accent */
+  --color-accent-quiet: #2a1f1c;
+  --color-gold: var(--palette-dourado);
+  --color-hairline: color-mix(in srgb, var(--palette-creme) 16%, transparent);
+  --color-hairline-strong: color-mix(in srgb, var(--palette-creme) 32%, transparent);
+  --color-focus: var(--palette-dourado);
+  --glow-oven: radial-gradient(
+    68% 58% at 78% 18%,
+    rgb(169 71 53 / 0.34) 0%,
+    rgb(199 166 106 / 0.12) 42%,
+    transparent 72%
+  );
+}
+
+.theme-creme {
+  color-scheme: light;
+
+  /* medido: navy/creme 15.51:1 · ink-2 7.70:1 · ink-3 5.50:1 · accent 5.00:1 */
+  --color-bg: #f4eee4;
+  --color-surface: #efe7da;
+  --color-surface-muted: #e7dccb;
+  --color-ink: var(--palette-navy);
+  --color-ink-2: #4a4a48;
+  --color-ink-3: #635f58;
+  --color-accent: var(--palette-terracota);
+  --color-accent-hover: #963e2e;
+  --color-accent-active: #7d3225;
+  --color-accent-fg: var(--palette-branco);
+  --color-accent-quiet: #f0e0d8;
+  --color-gold: #8a6a34;
+  --color-hairline: color-mix(in srgb, var(--palette-navy) 16%, transparent);
+  --color-hairline-strong: color-mix(in srgb, var(--palette-navy) 34%, transparent);
+  --color-focus: var(--palette-navy);
+  --glow-oven: radial-gradient(
+    62% 52% at 82% 12%,
+    rgb(199 166 106 / 0.2) 0%,
+    transparent 70%
+  );
+}
+
+/* ---------- Base ----------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-height) + var(--space-4));
+  }
+
+  body {
+    background-color: var(--palette-navy);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Foco: 2px, com deslocamento, sempre visível. Nunca removido. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+
+  /* Números tabulares onde há coluna, preço ou métrica */
+  .tabular,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    /* Sem movimento, o conteúdo aparece onde está — nunca deslocado. */
+    .reveal[data-inview="false"] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+}
+
+/* ---------- Primitivas de conteúdo ----------------------------------------- */
+@layer components {
+  .theme-navy,
+  .theme-creme {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+  }
+
+  /* Rótulo micro — caixa alta só aqui (11px, entreletra positiva) */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+
+  .theme-creme .eyebrow {
+    color: var(--color-accent);
+  }
+
+  /* Display — ratio fluido; entrelinha cai com o tamanho */
+  .display-hero {
+    font-size: clamp(2.75rem, 1.4rem + 5.4vw, 5.25rem);
+    line-height: var(--leading-display);
+    letter-spacing: -0.028em;
+  }
+
+  .display-section {
+    font-size: clamp(2rem, 1.25rem + 3vw, 3.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.026em;
+  }
+
+  .lede {
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+    line-height: 1.55;
+    max-width: var(--measure-tight);
+    color: var(--color-ink-2);
+  }
+
+  /* Texto corrido limitado a 45–75 caracteres */
+  .prose {
+    max-width: var(--measure);
+    color: var(--color-ink-2);
+  }
+
+  .measure-tight {
+    max-width: var(--measure-tight);
+  }
+
+  /* ---------- Superfícies -------------------------------------------------- */
+  .surface {
+    background-color: var(--color-surface);
+  }
+
+  .surface-muted {
+    background-color: var(--color-surface-muted);
+  }
+
+  /* ---------- Botões -------------------------------------------------------
+     Estados: default · hover · focus-visible · active · disabled · loading.
+     Alvo de toque 48px (>= 44px). Um único primário por tela. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    padding-inline: var(--space-6);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-instant) var(--ease-standard);
+  }
+
+  .btn-primary {
+    background-color: var(--color-accent);
+    color: var(--color-accent-fg);
+    box-shadow: var(--color-elev-2);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-accent-hover);
+  }
+
+  .btn-primary:active {
+    background-color: var(--color-accent-active);
+    transform: scale(0.985);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--color-ink);
+    border: 1px solid var(--color-hairline-strong);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--color-ink);
+    background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.985);
+  }
+
+  .btn-tertiary {
+    background-color: transparent;
+    color: var(--color-ink);
+    padding-inline: var(--space-1);
+    min-height: 44px;
+    text-transform: none;
+    letter-spacing: var(--tracking-normal);
+    font-size: var(--text-base);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--color-hairline-strong);
+  }
+
+  .btn-tertiary:hover {
+    text-decoration-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .btn-tertiary:active {
+    transform: scale(0.99);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* CTA principal mobile — largura estável, sem salto de layout */
+  .btn-block {
+    width: 100%;
+  }
+
+  /* ---------- Links de texto ---------------------------------------------- */
+  /*
+   * `inline-block` de propósito: em `display: inline` o `min-height` é
+   * ignorado pelo navegador e o alvo de toque fica com a altura da linha de
+   * texto (17px). Elementos que usam esta classe para navegação pedem
+   * `min-h-11` e ganham 44px de verdade.
+   */
+  .link-inline {
+    display: inline-block;
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--color-hairline-strong);
+    transition: text-decoration-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .link-inline:hover {
+    text-decoration-color: var(--color-accent);
+  }
+
+  /* ---------- Selos ------------------------------------------------------- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-full);
+    font-size: var(--text-2xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+
+  .badge-accent {
+    border-color: color-mix(in srgb, var(--color-accent) 42%, transparent);
+    background-color: var(--color-accent-quiet);
+    color: var(--color-ink);
+  }
+
+  /* ---------- Régua dourada: detalhe refinado, sem texto -------------------- */
+  .rule-gold {
+    display: block;
+    width: var(--space-10);
+    height: 1px;
+    background-color: var(--color-gold);
+    opacity: 0.7;
+  }
+
+  /* ---------- Grão: textura de fundo em áreas delimitadas ------------------ */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- Container --------------------------------------------------- */
+  .container-page {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: var(--space-5);
+  }
+
+  @media (min-width: 48rem) {
+    .container-page {
+      padding-inline: var(--space-8);
+    }
+  }
+
+  /* ---------- Seção: ritmo vertical pela escala ---------------------------- */
+  .section-y {
+    padding-block: var(--space-16);
+  }
+
+  @media (min-width: 48rem) {
+    .section-y {
+      padding-block: var(--space-20);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .section-y {
+      padding-block: var(--space-24);
+    }
+  }
+
+  /* ---------- Revelação on scroll -----------------------------------------
+     Anima apenas transform e opacity.
+
+     A condição é o atributo `data-inview="false"`, que só o hook escreve — e
+     só depois da hidratação. Logo o HTML do servidor NUNCA traz conteúdo
+     invisível: sem JavaScript, sem buscador e antes do primeiro pixel, o
+     atributo não existe e o texto aparece.
+
+     A transição fica na regra base (não na de estado) porque é o novo valor
+     computado que a aplica: se ficasse em `[data-inview="false"]`, ao virar
+     "true" a transição já teria sumido e o reveal não animaria.
+
+     Não existe flag global de "há JavaScript" no <html>: mutar o DOM antes da
+     hidratação (classe ou data-*) faz o React acusar mismatch de atributos no
+     elemento que ele controla. Aqui não há nada para mutar. */
+  .reveal {
+    transition:
+      opacity var(--duration-slow) var(--ease-emphasized),
+      transform var(--duration-slow) var(--ease-emphasized);
+  }
+
+  .reveal[data-inview="false"] {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-distance, 14px), 0);
+  }
+
+  /* ---------- Pilar (diferenciais): fio que desenha no hover + volume 3D --- */
+  .pillar__glow {
+    background: radial-gradient(
+      70% 70% at 50% 50%,
+      color-mix(in srgb, var(--color-accent) 26%, transparent) 0%,
+      transparent 72%
+    );
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pillar__icon {
+      transform-style: preserve-3d;
+      transition: transform var(--duration-base) var(--ease-standard);
+    }
+
+    .pillar:hover .pillar__icon {
+      transform: translate3d(0, -2px, 0) rotateX(-10deg) scale(1.06);
+    }
+
+    .pillar:hover .pillar__glow {
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Link de salto ------------------------------------------------ */
+  .skip-link {
+    position: fixed;
+    top: var(--space-3);
+    left: var(--space-3);
+    z-index: var(--z-toast);
+    display: inline-flex;
+    min-height: var(--size-touch);
+    align-items: center;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    transform: translateY(calc(-100% - var(--space-6)));
+    transition: transform var(--duration-fast) var(--ease-emphasized);
+  }
+
+  .skip-link:focus-visible {
+    transform: none;
+  }
+
+  /* ---------- Wordmark: microinteração discreta no rodapé ------------------ */
+  .footer-mark {
+    transition: transform var(--duration-slow) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .footer-mark:hover {
+      transform: rotate(-8deg) scale(1.05);
+    }
+  }
+
+  /* ---------- Nazar Club: escada de acúmulo ------------------------------- */
+  .club__item {
+    transition:
+      transform var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard);
+  }
+
+  .club__glow {
+    background: radial-gradient(
+      80% 60% at 50% 100%,
+      color-mix(in srgb, var(--palette-dourado) 20%, transparent) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Degraus: cada nível sobe um pouco mais — a progressão é a metáfora. */
+    .club__item:nth-child(1) {
+      transform: translateY(0);
+    }
+    .club__item:nth-child(2) {
+      transform: translateY(-0.75rem);
+    }
+    .club__item:nth-child(3) {
+      transform: translateY(-1.5rem);
+    }
+
+    .club__item:hover {
+      border-color: color-mix(in srgb, var(--palette-dourado) 52%, transparent);
+    }
+
+    .club__item:hover .club__glow {
+      opacity: 1;
+    }
+  }
+
+  /* ---------- Momento editorial: profundidade sem JS ------------------------ */
+  .moment__frame {
+    perspective: 1000px;
+  }
+
+  .moment__light {
+    background: radial-gradient(
+      60% 60% at 30% 20%,
+      color-mix(in srgb, var(--palette-dourado) 22%, transparent) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--ease-standard);
+  }
+
+  .moment__texture {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23t)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .moment__frame {
+      transition: transform var(--duration-base) var(--ease-standard);
+    }
+
+    .moment__art {
+      transition: transform var(--duration-slow) var(--ease-standard);
+    }
+
+    .moment__frame:hover,
+    .moment__frame:focus-within {
+      transform: rotateX(2.5deg) rotateY(-2deg);
+    }
+
+    .moment__frame:hover .moment__art,
+    .moment__frame:focus-within .moment__art {
+      transform: scale(1.045);
+    }
+
+    .moment__frame:hover .moment__light,
+    .moment__frame:focus-within .moment__light {
+      opacity: 1;
+    }
+
+    .moment__frame:hover .moment__texture,
+    .moment__frame:focus-within .moment__texture {
+      opacity: 0.16;
+    }
+  }
+
+  /* ---------- Cartão com volume ------------------------------------------
+     Profundidade por CSS: o JS apenas escreve --tilt-x/--tilt-y. Sem
+     reduced-motion, a transformação nem é declarada. */
+  .card {
+    perspective: 900px;
+  }
+
+  .card__art {
+    transition: transform var(--duration-slow) var(--ease-standard);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card__body {
+      transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+      transition: transform var(--duration-base) var(--ease-standard);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .card:hover .card__art {
+        transform: scale(1.04);
+      }
+    }
+  }
+
+}
